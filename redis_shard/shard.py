@@ -1,47 +1,37 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import re
 import redis
-from hashring import HashRing
+from resource_directory import ResourceDirectory
 import functools
 
 _findhash = re.compile('.*\{(.*)\}.*', re.I)
 
-class RedisShardAPI(object):
+class ShardedRedis(object):
 
-    def __init__(self,servers):
-        VERSION = tuple(map(int, redis.__version__.split('.')))
-        self.nodes = []
+    def __init__(self, servers):
+        self.server_names = []
         self.connections = {}
+        VERSION = tuple(map(int, redis.__version__.split('.')))
         if VERSION < (2,4,0):
             self.pool = redis.ConnectionPool()
         else:
             self.pool = None
-        if isinstance(servers,list):
-            for server in servers:
-                conn = redis.Redis(host=server['host'], port=server['port'], db=server['db'],connection_pool=self.pool)
-                name = server['name']
-                if name in self.connections:
-                    raise ValueError("server's name config must be unique")
-                self.connections[name] = conn
-                self.nodes.append(name)
-        elif isinstance(servers,dict):
-            for server_name,server in servers.items():
-                conn = redis.Redis(host=server['host'], port=server['port'], db=server['db'],connection_pool=self.pool)
-                name = server_name
-                if name in self.connections:
-                    raise ValueError("server's name config must be unique")
-                self.connections[name] = conn
-                self.nodes.append(name)
-        else:
-            raise ValueError("server's config must be list or dict")
-        self.ring = HashRing(self.nodes)
+
+        for server in servers:
+            name = server['name']
+            if name in self.connections:
+                raise ValueError("server's name config must be unique")
+            self.connections[name] = redis.Redis(
+                    host=server['host'], port=server['port'],
+                    db=server['db'],connection_pool=self.pool)
+            self.server_names.append(name)
+
+        self.directory = ResourceDirectory(self.server_names)
 
     def get_server_name(self, key):
         g = _findhash.match(key)
         if g != None and len(g.groups()) > 0:
             key = g.groups()[0]
-        name = self.ring.get_node(key)
+        name = self.directory.get_name(key)
         return name
 
     def get_server(self,key):
@@ -72,7 +62,6 @@ class RedisShardAPI(object):
 
     def __hop_in(self, method, *args, **kwargs):
         '''
-        使用field作为查询hashring的key
         '''
         try:
             key = args[1]
@@ -88,11 +77,10 @@ class RedisShardAPI(object):
             print "you can't be here"
         f = getattr(server, method)
         return f(*args, **kwargs)
-        
+
     def __qop_in(self, method, *args, **kwargs):
         '''
-        指定key值所对应的hashring上的一个节点作为队列服务器
-        '''    
+        '''
         key = "queue"
         server = self.get_server(key)
         if method == "rpush_in":
@@ -103,7 +91,7 @@ class RedisShardAPI(object):
             print "you can't be here"
         f = getattr(server, method)
         return f(*args, **kwargs)
-        
+
     def __getattr__(self, method):
         if method in [
             "get", "set", "getset",
@@ -113,7 +101,7 @@ class RedisShardAPI(object):
             "expire", "ttl", "push",
             "llen", "lrange", "ltrim","lpush","lpop",
             "lindex", "pop", "lset",
-            "lrem", "sadd", "srem",
+            "lrem", "sadd", "srem", "scard",
             "sismember", "smembers",
             "zadd", "zrem", "zincr","zrank",
             "zrange", "zrevrange", "zrangebyscore","zremrangebyrank",
@@ -151,12 +139,12 @@ class RedisShardAPI(object):
 
     def keys(self,key):
         _keys = []
-        for node in self.nodes:
-            server = self.connections[node]
+        for server_name in self.server_names:
+            server = self.connections[server_name]
             _keys.extend(server.keys(key))
         return _keys
 
     def flushdb(self):
-        for node in self.nodes:
-            server = self.connections[node]
+        for server_name in self.server_names:
+            server = self.connections[server_name]
             server.flushdb()
