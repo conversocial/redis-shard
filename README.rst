@@ -1,9 +1,9 @@
 Redis Shard 
 ==============
-This is a fork of youngking's `Redis Shard<https://github.com/youngking/redis-shard>`
+This is a fork of youngking's `Redis Shard<https://github.com/youngking/redis-shard>`_
 project. I don't quite see the reason for using a complex hash ring approach
 when the whole basis of antirez's hashing approach is the use of a fixed number 
-of servers. This allows us to use a simple `hashed_key % n` approach to map
+of servers. This allows us to use a simple ``hashed_key % n`` approach to map
 to one of n servers.
 
 Sharding is based on the modulus of a SHA1 of the key or key tag ("key{key_tag}"),
@@ -27,7 +27,7 @@ Useage
 >>> print client.zrange('testset',0,-1)
 
 To perform any operations which require pipelines or intermediate storage (e.g.
-SINTERSTORE) get the Redis connection object by calling `get_server_name`
+SINTERSTORE) get the Redis connection object by calling ``get_server_name``
 
 >>> sharded_client = RedisShardAPI(servers)
 >>> individual_client = client.get_server_name('my_key')
@@ -46,7 +46,7 @@ see article `http://antirez.com/post/redis-presharding.html` for detail.
 >>> print client.get_server_name('foo') == client.get_server_name('a{foo}') == client.get_server_name('{foo}d') \
 ... == client.get_server_name('d{foo}e')
 
-I also added an `tag_keys` method,which is more quickly than default `keys` method,because it only look 
+I also added an ``tag_keys`` method,which is more quickly than default ``keys`` method,because it only look 
 one machine.
 
 >>> client.tag_keys('*{foo}*') == client.keys('*{foo}*')
