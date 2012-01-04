@@ -1,6 +1,10 @@
 import hashlib
 
 class ResourceDirectory(object):
+    """Given a list of resource names, map keys to resources
+    using a simple modulus of the hashed key.
+    """
+
     def __init__(self, resource_names):
         self.num_resources = len(resource_names)
         self.resource_names = resource_names

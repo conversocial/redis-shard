@@ -1,20 +1,16 @@
 Redis Shard 
 ==============
-A redis sharding api. Sharding is done based on the CRC32 checksum of a key or key tag ("key{key_tag}"),
-according to this article http://antirez.com/post/redis-presharding.html .
+This is a fork of youngking's `Redis Shard<https://github.com/youngking/redis-shard>`
+project. I don't quite see the reason for using a complex hash ring approach
+when the whole basis of antirez's hashing approach is the use of a fixed number 
+of servers. This allows us to use a simple `hashed_key % n` approach to map
+to one of n servers.
 
-The source code is locate at `github <https://github.com/youngking/redis-shard>`_ .
+Sharding is based on the modulus of a SHA1 of the key or key tag ("key{key_tag}"),
+according to this article http://antirez.com/post/redis-presharding.html.
 
 Useage
 ==============
-Creating a hash ring with multiple servers,By default the hash ring uses a crc32
-hashing algorithm on the server's ``name`` config.You can define the name anything
-as you like,but it must be unique.
-
-I don't want to bind the hashring with ipaddress,because if I do some master/slave switches,
-I can only change the ipaddress related config. The ``name`` is kept,so the hashring's order
-is kept.
-
 >>> from redis_shard.shard import RedisShardAPI
 >>> servers = [
     ...    {'name':'server1','host':'127.0.0.1','port':10000,'db':0},
@@ -29,6 +25,14 @@ is kept.
 >>> client.zadd('testset','first',1)
 >>> client.zadd('testset','second',2)
 >>> print client.zrange('testset',0,-1)
+
+To perform any operations which require pipelines or intermediate storage (e.g.
+SINTERSTORE) get the Redis connection object by calling `get_server_name`
+
+>>> sharded_client = RedisShardAPI(servers)
+>>> individual_client = client.get_server_name('my_key')
+>>> pipeline = individual_client.pipeline()
+...
 
 Hash tags
 ----------------
