@@ -1,5 +1,8 @@
+from __future__ import absolute_import
+
 from unittest import TestCase
 
+import six
 from redis import Redis
 
 from redis_shard.shard import ShardedRedis
@@ -33,14 +36,14 @@ class ShardedRedisTests(TestCase):
             {'name': 'r1', 'host': 'localhost', 'port': 1, 'password': '', 'db': 0},
             {'name': 'r1', 'host': 'example.com', 'port': 2, 'password': '', 'db': 0},
         ]
-        with self.assertRaisesRegexp(ValueError, r"^server's name config must be unique$"):
+        with six.assertRaisesRegex(self, ValueError, r"^server's name config must be unique$"):
             ShardedRedis(servers)
 
     def test_directory_set_up_correctly(self):
-        self.assertEquals(4, self.sharded_redis.directory.num_resources)
+        self.assertEqual(4, self.sharded_redis.directory.num_resources)
 
     def test_key_hashing_respects_braces(self):
-        self.assertEquals(self.sharded_redis.get_server_name('asdl{key1}asdlkfj'),
+        self.assertEqual(self.sharded_redis.get_server_name('asdl{key1}asdlkfj'),
                 self.sharded_redis.get_server_name('key1'))
 
     def test_get_server(self):
@@ -84,7 +87,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'method \'get\' requires a key param as the first argument'
-        with self.assertRaisesRegexp(ValueError, expected_rx):
+        with six.assertRaisesRegex(self, ValueError, expected_rx):
             self.sharded_redis.get()
         self.assertFalse(mock_get_server.called)
 
@@ -92,7 +95,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'method \'get\' requires a key param as the first argument'
-        with self.assertRaisesRegexp(ValueError, expected_rx):
+        with six.assertRaisesRegex(self, ValueError, expected_rx):
             self.sharded_redis.get(123, 'arg1', 'arg2', kwarg1=1, kwarg2=2)
         self.assertFalse(mock_get_server.called)
 
@@ -119,7 +122,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'method \'tag_foobar\' requires tag key params as its arguments'
-        with self.assertRaisesRegexp(ValueError, expected_rx):
+        with six.assertRaisesRegex(self, ValueError, expected_rx):
             self.sharded_redis.tag_foobar('test', 'arg1', 'arg2', kwarg1=1, kwarg2=2)
         self.assertFalse(mock_get_server.called)
 
@@ -138,7 +141,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'method \'tag_foobar\' requires tag key params as its arguments'
-        with self.assertRaisesRegexp(ValueError, expected_rx):
+        with six.assertRaisesRegex(self, ValueError, expected_rx):
             self.sharded_redis.tag_foobar(['test1', 'test2'], 'arg1', 'arg2', kwarg1=1, kwarg2=2)
         self.assertFalse(mock_get_server.called)
 
@@ -161,9 +164,9 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'method \'hget_in\' requires a key param as the second argument'
-        with self.assertRaisesRegexp(ValueError, expected_rx):
+        with six.assertRaisesRegex(self, ValueError, expected_rx):
             self.sharded_redis.hget_in()
-        with self.assertRaisesRegexp(ValueError, expected_rx):
+        with six.assertRaisesRegex(self, ValueError, expected_rx):
             self.sharded_redis.hget_in('foobar')
         self.assertFalse(mock_get_server.called)
 
@@ -171,7 +174,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'method \'hget_in\' requires a key param as the second argument'
-        with self.assertRaisesRegexp(ValueError, expected_rx):
+        with six.assertRaisesRegex(self, ValueError, expected_rx):
             self.sharded_redis.hget_in('foobar', 123, 'arg2', 'arg3', kwarg1=1, kwarg2=2)
         self.assertFalse(mock_get_server.called)
 
@@ -194,7 +197,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'method \'unsupported_method\' cannot be sharded'
-        with self.assertRaisesRegexp(NotImplementedError, expected_rx):
+        with six.assertRaisesRegex(self, NotImplementedError, expected_rx):
             self.sharded_redis.unsupported_method()
         self.assertFalse(mock_get_server.called)
 
@@ -212,7 +215,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'The key must be single string;mutiple keys cannot be sharded'
-        with self.assertRaisesRegexp(NotImplementedError, expected_rx):
+        with six.assertRaisesRegex(self, NotImplementedError, expected_rx):
             self.sharded_redis.brpop(123)
         self.assertFalse(mock_get_server.called)
 
@@ -230,7 +233,7 @@ class ShardedRedisTests(TestCase):
         mock_get_server = Mock(spec=Redis)
         self.sharded_redis.get_server = mock_get_server
         expected_rx = r'The key must be single string;mutiple keys cannot be sharded'
-        with self.assertRaisesRegexp(NotImplementedError, expected_rx):
+        with six.assertRaisesRegex(self, NotImplementedError, expected_rx):
             self.sharded_redis.blpop(123)
         self.assertFalse(mock_get_server.called)
 

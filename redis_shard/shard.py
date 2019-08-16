@@ -1,9 +1,11 @@
+from __future__ import absolute_import
 import re
 import redis
-from resource_directory import ResourceDirectory
+import six
+from redis_shard.resource_directory import ResourceDirectory
 import functools
 
-_findhash = re.compile('.*\{(.*)\}.*', re.I)
+_findhash = re.compile(r'.*{(.*)}.*', re.I)
 
 
 class ShardedRedis(object):
@@ -42,7 +44,7 @@ class ShardedRedis(object):
     def __wrap(self, method, *args, **kwargs):
         try:
             key = args[0]
-            assert isinstance(key, basestring)
+            assert isinstance(key, six.string_types)
         except:
             raise ValueError("method '%s' requires a key param as the first argument" % method)
         server = self.get_server(key)
@@ -51,7 +53,7 @@ class ShardedRedis(object):
 
     def __wrap_tag(self,method,*args,**kwargs):
         key = args[0]
-        if isinstance(key, basestring) and '{' in key:
+        if isinstance(key, six.string_types) and '{' in key:
             server = self.get_server(key)
         elif isinstance(key, list) and '{' in key[0]:
             server = self.get_server(key[0])
@@ -66,7 +68,7 @@ class ShardedRedis(object):
         '''
         try:
             key = args[1]
-            assert isinstance(key, basestring)
+            assert isinstance(key, six.string_types)
         except:
             raise ValueError("method '%s' requires a key param as the second argument" % method)
         server = self.get_server(key)
@@ -127,13 +129,13 @@ class ShardedRedis(object):
     ########################################
 
     def brpop(self,key, timeout=0):
-        if not isinstance(key, basestring):
+        if not isinstance(key, six.string_types):
             raise NotImplementedError("The key must be single string;mutiple keys cannot be sharded")
         server = self.get_server(key)
         return server.brpop(key,timeout)
 
     def blpop(self,key, timeout=0):
-        if not isinstance(key, basestring):
+        if not isinstance(key, six.string_types):
             raise NotImplementedError("The key must be single string;mutiple keys cannot be sharded")
         server = self.get_server(key)
         return server.blpop(key,timeout)

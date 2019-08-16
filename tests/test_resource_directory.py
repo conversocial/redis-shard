@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import hashlib
 
 from unittest import TestCase
@@ -10,12 +12,12 @@ class ServerDirectoryTests(TestCase):
         self.resource_dir = ResourceDirectory(self.names)
 
     def test_num_buckets(self):
-        self.assertEquals(len(self.names), self.resource_dir.num_resources)
+        self.assertEqual(len(self.names), self.resource_dir.num_resources)
 
     def test_key_to_server_name(self):
         key = 'key1'
-        expected = int(hashlib.sha1(key).hexdigest()[:16], 16) % 4
-        self.assertEquals(
+        expected = int(hashlib.sha1(key.encode('utf-8')).hexdigest()[:16], 16) % 4
+        self.assertEqual(
             self.names[expected],
             self.resource_dir.get_name(key))
 
@@ -26,4 +28,4 @@ class ServerDirectoryTests(TestCase):
 
         for x in range(10):
             key = 'key%s' % x
-            self.assertEquals('r1', resource_dir.get_name(key))
+            self.assertEqual('r1', resource_dir.get_name(key))
