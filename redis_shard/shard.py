@@ -5,6 +5,7 @@ import functools
 
 _findhash = re.compile('.*\{(.*)\}.*', re.I)
 
+
 class ShardedRedis(object):
 
     def __init__(self, servers):
@@ -29,7 +30,7 @@ class ShardedRedis(object):
 
     def get_server_name(self, key):
         g = _findhash.match(key)
-        if g != None and len(g.groups()) > 0:
+        if g is not None and len(g.groups()) > 0:
             key = g.groups()[0]
         name = self.directory.get_name(key)
         return name
@@ -74,7 +75,7 @@ class ShardedRedis(object):
         elif method == "hset_in":
             method = "hset"
         else:
-            print "you can't be here"
+            raise RuntimeError("you can't be here")
         f = getattr(server, method)
         return f(*args, **kwargs)
 
@@ -88,7 +89,7 @@ class ShardedRedis(object):
         elif method == "blpop_in":
             method = "blpop"
         else:
-            print "you can't be here"
+            raise RuntimeError("you can't be here")
         f = getattr(server, method)
         return f(*args, **kwargs)
 

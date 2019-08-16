@@ -1,5 +1,6 @@
 import hashlib
 
+
 class ResourceDirectory(object):
     """Given a list of resource names, map keys to resources
     using a simple modulus of the hashed key.
@@ -15,4 +16,3 @@ class ResourceDirectory(object):
 
     def get_name(self, key):
         return self.resource_names[self._hash(key)]
-
