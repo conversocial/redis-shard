@@ -22,7 +22,7 @@ setup(
         "Change History\n" +
         "==============\n\n" +
         read_file("CHANGES.rst")),
-    version="0.1.5",
+    version="0.2.0",
     packages=["redis_shard"],
     include_package_data=True,
     zip_safe=False,
